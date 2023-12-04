@@ -40,7 +40,9 @@ def check_symlink(file1, file2):
 
 rule all:
     input:
-       f'../03_vcf/{run_name}.vcf.gz'
+        '../04_singlesample_vcf/done.txt',
+        '../04_singlesample_vcf/done2.txt'
+
        # expand('../02_FilteredBedgraphs/{sample}/{sample}_min{filter}.bedgraph',sample=SAMPLES,filter=minAlignments),
        # expand('{outdir}/03_metilene_call_{filter}/dmr_metilene_qval.0.05.bed',filter=minAlignments,outdir=outdir),
        # expand('{outdir}/03_bat_summarize_{filter}/BAT_summarize_summary_case_control.bedgraph.gz',filter=minAlignments,outdir=outdir)
@@ -70,13 +72,37 @@ rule GTC_2_BCF_VCF:
         multibcf = f'../03_vcf/{run_name}.bcf',
         multivcf = f'../03_vcf/{run_name}.vcf.gz'
 
-    
+    conda:
+        'envs/pysam.yaml'
     threads: 12
 
     shell:
         'export BCFTOOLS_PLUGINS="bin/bcftools/";\
          {bcftools} +gtc2vcf --no-version -Ou --bpm {manifest_bpm} --egt {clusterfile_egt}  --extra test.tsv --gtcs  {input.infolder} --fasta-ref {ref} |  {bcftools} sort -Ou -T ./bcftools. | {bcftools} norm --no-version -Ob -c x -f {ref} > {output.multibcf};\
-         {bcftools} view {output.multibcf} | gzip -c > {output.multivcf}'
+         {bcftools} view {output.multibcf} | bgzip -c > {output.multivcf}'
 
 
+rule SplitVFC1:
+    input:
+        multivcf = f'../03_vcf/{run_name}.vcf.gz'
+    threads: 1
 
+    output:
+        fin = '../04_singlesample_vcf/done.txt'
+    conda:
+        'envs/pysam.yaml'
+    shell:
+        'for sample in $({bcftools} query -l {input.multivcf}); do echo ${{sample}} ; {bcftools} view -c1 -Oz -s ${{sample}} -o ../04_singlesample_vcf/${{sample}}.vcf.gz {input.multivcf} ; done  ; touch {output.fin}'
+    
+
+rule SplitVFC2:
+    threads: 1
+
+    input:
+        multivcf = f'../03_vcf/{run_name}.vcf.gz'
+    output:
+        fin = '../04_singlesample_vcf/done2.txt'
+    conda:
+        'envs/pysam.yaml'
+    shell:
+        'for sample in $({bcftools} query -l {input.multivcf}); do echo ${{sample}} ; {bcftools} view  -Oz -s ${{sample}} -o ../04_singlesample_vcf/${{sample}}.allarraypositions.vcf.gz {input.multivcf} ; done  ; touch {output.fin}'

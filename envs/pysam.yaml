@@ -1,0 +1,9 @@
+
+name: pysam
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - pysam==0.22.0
+  - tabix
+  - tqdm
