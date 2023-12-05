@@ -14,6 +14,10 @@ idatfolder=d['idatfolder']
 clusterfile_egt=d['clusterfile_egt']
 manifest_bpm=d['manifest_bpm']
 
+samplesheet = d.get('samplesheet')
+if samplesheet!=None:
+    copy_rule = ['../05_vcf/copydone.txt']
+
 print(idatfolder)
 run_name = idatfolder.rstrip('/').split('/')[-1]
 print(run_name)
@@ -41,7 +45,9 @@ def check_symlink(file1, file2):
 rule all:
     input:
         '../04_singlesample_vcf/done.txt',
-        '../04_singlesample_vcf/done2.txt'
+        '../04_singlesample_vcf/done2.txt',
+        copy_rule
+
 
        # expand('../02_FilteredBedgraphs/{sample}/{sample}_min{filter}.bedgraph',sample=SAMPLES,filter=minAlignments),
        # expand('{outdir}/03_metilene_call_{filter}/dmr_metilene_qval.0.05.bed',filter=minAlignments,outdir=outdir),
@@ -106,3 +112,19 @@ rule SplitVFC2:
         'envs/pysam.yaml'
     shell:
         'for sample in $({bcftools} query -l {input.multivcf}); do echo ${{sample}} ; {bcftools} view  -Oz -s ${{sample}} -o ../04_singlesample_vcf/${{sample}}.allarraypositions.vcf.gz {input.multivcf} ; done  ; touch {output.fin}'
+
+
+
+rule SamplesheetCopy:
+    threads: 1
+
+    input:
+        samplesheet = {samplesheet},
+        splitdone = '../04_singlesample_vcf/done2.txt'
+    output:
+        fin = '../05_vcf/copydone.txt'
+    conda:
+        'envs/pysam.yaml'
+    shell:
+        'python bin/samplesheetcopy/ssheet_copy.py {input.samplesheet} ../04_singlesample_vcf/ ../05_vcf/ && touch {output.fin}'
+
