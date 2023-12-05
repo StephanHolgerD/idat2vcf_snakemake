@@ -120,12 +120,11 @@ rule SamplesheetCopy:
     threads: 1
 
     input:
-        samplesheet = {samplesheet},
         splitdone = '../04_singlesample_vcf/done2.txt'
     output:
         fin = '../05_vcf/copydone.txt'
     conda:
         'envs/pysam.yaml'
     shell:
-        'python bin/samplesheetcopy/ssheet_copy.py {input.samplesheet} ../04_singlesample_vcf/ ../05_vcf/ && touch {output.fin}'
+        'python bin/samplesheetcopy/ssheet_copy.py {samplesheet} ../04_singlesample_vcf/ ../05_vcf/ && touch {output.fin}'
 
