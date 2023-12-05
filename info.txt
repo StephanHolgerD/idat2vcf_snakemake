@@ -1,0 +1,1 @@
+a=$(bcftools query -l 206905720006.bcf) ; s=$(echo ${a} | sed s'/ /;/g') ; echo -e 'CHROM;POS;ID;REF;ALT;'${s} >out2.csv ; bcftools query -f '%CHROM;%POS;%ID;%REF;%ALT[;%GT]\n' 206905720006.bcf >> out2.csv
