@@ -14,6 +14,7 @@ idatfolder=d['idatfolder']
 clusterfile_egt=d['clusterfile_egt']
 manifest_bpm=d['manifest_bpm']
 
+copy_rule = []
 samplesheet = d.get('samplesheet')
 if samplesheet!=None:
     copy_rule = ['../05_vcf/copydone.txt']
